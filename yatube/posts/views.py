@@ -113,7 +113,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    # Выбираем автора (author), смотрим, кто на него подписан (following), 
+    # Выбираем автора (author), смотрим, кто на него подписан (following),
     # из подписок автора берем текущего пользователя (user=request.user)
     posts_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(posts_list, NUMBER_OF_POSTS)
@@ -130,7 +130,7 @@ def profile_follow(request, username):
     # Подписаться на автора
     author = get_object_or_404(User, username=username)
     follower = Follow.objects.filter(user=request.user, author=author)
-    # Если наш текущий пользователь не автор, на которого хотим подписаться, 
+    # Если наш текущий пользователь не автор, на которого хотим подписаться,
     # и пользователь еще не подписан на этого автора:
     if request.user != author and not follower.exists():
         Follow.objects.create(user=request.user, author=author)
@@ -139,7 +139,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    # Дизлайк, отписка
     author = get_object_or_404(User, username=username)
     following = Follow.objects.filter(user_id=request.user, author=author)
     if following.exists():

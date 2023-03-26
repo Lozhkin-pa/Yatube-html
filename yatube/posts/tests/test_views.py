@@ -37,7 +37,6 @@ class PostsPagesTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         templates_pages_names_for_guest = {
@@ -267,7 +266,6 @@ class FollowPageTests(TestCase):
             text='Пост для тестирования авторизованного пользователя',
         )
 
-
     def test_follow_page(self):
         """Шаблон follow сформирован с правильным контекстом."""
         # Подписываемся юзером на автора
@@ -286,7 +284,6 @@ class FollowPageTests(TestCase):
         self.assertEqual(post_author_0, self.post.author)
         self.assertEqual(post_group_0, self.post.group)
 
-
     def test_profile_follow_and_unfollow(self):
         """Пользователь может подписываться и отписываться от авторов."""
         first_response = self.follower_client.get(
@@ -294,8 +291,8 @@ class FollowPageTests(TestCase):
         )
         self.follower_client.post(
             reverse(
-            'posts:profile_follow', kwargs={'username': self.user_author}
-        )
+                'posts:profile_follow', kwargs={'username': self.user_author}
+            )
         )
         second_response = self.follower_client.get(
             reverse('posts:follow_index')
@@ -309,8 +306,8 @@ class FollowPageTests(TestCase):
         )
         self.follower_client.post(
             reverse(
-            'posts:profile_unfollow', kwargs={'username': self.user_author}
-        )
+                'posts:profile_unfollow', kwargs={'username': self.user_author}
+            )
         )
         third_response = self.follower_client.get(
             reverse('posts:follow_index')
@@ -322,7 +319,6 @@ class FollowPageTests(TestCase):
                 author=self.user_author,
             ).exists()
         )
-
 
     def test_new_post_author_on_follow_page(self):
         """Новая запись автора появляется только в ленте подписчика."""

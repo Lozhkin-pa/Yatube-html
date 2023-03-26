@@ -36,7 +36,7 @@ class Post(models.Model):
         'Картинка',
         upload_to='posts/',
         blank=True
-    ) 
+    )
 
     def __str__(self) -> str:
         return self.text[:15]
@@ -46,16 +46,17 @@ class Post(models.Model):
         verbose_name_plural = 'Посты'
         ordering = ['-pub_date']
 
+
 class Comment(models.Model):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name = 'comments'
+        related_name='comments'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name = 'comments'
+        related_name='comments'
     )
     text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -63,16 +64,17 @@ class Comment(models.Model):
     def __str__(self) -> str:
         return self.text
 
+
 class Follow(models.Model):
     # follower - юзер, который подписывается
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name = 'follower'
+        related_name='follower'
     )
     # following - юзер, на которого подписываются
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name = 'following'
+        related_name='following'
     )
