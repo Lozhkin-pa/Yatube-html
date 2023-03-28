@@ -29,7 +29,6 @@ class StaticURLTests(TestCase):
         self.authorized_client.force_login(self.user)
         cache.clear()
 
-
     def test_pages(self):
         """Доступность вызываемой страницы."""
         page_list_for_guest_client = [

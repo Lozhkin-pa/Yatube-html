@@ -212,7 +212,6 @@ class PaginatorViewsTest(TestCase):
         self.authorized_client.force_login(self.user)
         cache.clear()
 
-
     def test_pages_contains_correct_records(self):
         NUM_POSTS_FIRST_PAGE: int = 10
         NUM_POSTS_SECOND_PAGE: int = 3
@@ -421,7 +420,7 @@ class AddCommentTests(TestCase):
     def test_add_comment_for_authorized_client(self):
         """Оставлять комментарий может только авторизованный пользователь."""
         comments_count = Comment.objects.count()
-        form_data = {   
+        form_data = {
             'text': 'Новый комментарий к посту'
         }
         response_auth = [

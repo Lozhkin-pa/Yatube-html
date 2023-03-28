@@ -172,10 +172,10 @@ class CommentCreateFormTests(TestCase):
     def test_add_comment_page_for_authorized_client(self):
         """Форма создает новый комментарий авторизованного пользователя."""
         comments_count = Comment.objects.count()
-        form_data = {   
+        form_data = {
             'text': 'Новый комментарий к посту'
         }
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
             data=form_data,
             follow=True
@@ -208,10 +208,10 @@ class CommentCreateFormTests(TestCase):
     def test_add_comment_page_for_author_client(self):
         """Форма создает новый комментарий автора поста."""
         comments_count = Comment.objects.count()
-        form_data = {   
+        form_data = {
             'text': 'Новый комментарий к посту'
         }
-        response = self.author_client.post(
+        self.author_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
             data=form_data,
             follow=True
