@@ -113,8 +113,6 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    # Выбираем автора (author), смотрим, кто на него подписан (following),
-    # из подписок автора берем текущего пользователя (user=request.user)
     posts_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(posts_list, NUMBER_OF_POSTS)
     page_number = request.GET.get('page')
@@ -127,11 +125,8 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    # Подписаться на автора
     author = get_object_or_404(User, username=username)
     follower = Follow.objects.filter(user=request.user, author=author)
-    # Если наш текущий пользователь не автор, на которого хотим подписаться,
-    # и пользователь еще не подписан на этого автора:
     if request.user != author and not follower.exists():
         Follow.objects.create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
