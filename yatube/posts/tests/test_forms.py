@@ -150,39 +150,35 @@ class CommentCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='test-author')
+        cls.guest_client = Client()
+        cls.author_client = Client()
+        cls.user_author = User.objects.create(username='test-author')
+        cls.author_client.force_login(cls.user_author)
+        cls.authorized_client = Client()
+        cls.user_authorized = User.objects.create(username='test-authorized')
+        cls.authorized_client.force_login(cls.user_authorized)
         cls.group = Group.objects.create(
             title='Тестовая группа #2',
             slug='test-slug-com',
             description='Тестовое описание #2',
         )
         cls.post = Post.objects.create(
-            author=cls.user,
+            author=cls.user_author,
             group=cls.group,
             text='Тестовый пост для комментария',
         )
         cls.form = CommentForm()
 
-    def setUp(self):
-        self.guest_client = Client()
-        self.user = self.post.author
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-
     def test_add_comment_page_for_authorized_client(self):
-        """Валидная форма создает новый комментарий."""
+        """Форма создает новый комментарий авторизованного пользователя."""
         comments_count = Comment.objects.count()
-        form_data = {
+        form_data = {   
             'text': 'Новый комментарий к посту'
         }
         response = self.authorized_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
             data=form_data,
             follow=True
-        )
-        self.assertRedirects(response, reverse(
-            'posts:post_detail', kwargs={'post_id': self.post.pk}
-        )
         )
         self.assertEqual(Comment.objects.count(), comments_count + 1)
         self.assertTrue(
@@ -192,7 +188,7 @@ class CommentCreateFormTests(TestCase):
         )
 
     def test_add_comment_page_for_guest_client(self):
-        """Валидная форма создает новый комментарий."""
+        """Форма не создает новый комментарий гостя."""
         comments_count = Comment.objects.count()
         form_data = {
             'text': 'Новый комментарий к посту'
@@ -204,6 +200,24 @@ class CommentCreateFormTests(TestCase):
         )
         self.assertEqual(Comment.objects.count(), comments_count)
         self.assertFalse(
+            Comment.objects.filter(
+                text=form_data['text'],
+            ).exists()
+        )
+
+    def test_add_comment_page_for_author_client(self):
+        """Форма создает новый комментарий автора поста."""
+        comments_count = Comment.objects.count()
+        form_data = {   
+            'text': 'Новый комментарий к посту'
+        }
+        response = self.author_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
+            data=form_data,
+            follow=True
+        )
+        self.assertEqual(Comment.objects.count(), comments_count + 1)
+        self.assertTrue(
             Comment.objects.filter(
                 text=form_data['text'],
             ).exists()

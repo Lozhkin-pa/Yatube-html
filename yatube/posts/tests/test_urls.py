@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from ..models import Group, Post
 from http import HTTPStatus
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -26,6 +27,8 @@ class StaticURLTests(TestCase):
         self.user = self.post.author
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
+
 
     def test_pages(self):
         """Доступность вызываемой страницы."""

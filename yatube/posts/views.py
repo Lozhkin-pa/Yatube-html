@@ -4,11 +4,13 @@ from django.contrib.auth import get_user_model
 from .models import Post, Group, Follow
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 
 NUMBER_OF_POSTS: int = 10
 User = get_user_model()
 
 
+@cache_page(20, key_prefix='index_page')
 def index(request):
     post_list = Post.objects.select_related('author', 'group').all()
     paginator = Paginator(post_list, NUMBER_OF_POSTS)

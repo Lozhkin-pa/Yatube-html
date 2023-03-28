@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django import forms
 from ..forms import PostForm
-from ..models import Group, Post, Follow
+from ..models import Group, Post, Follow, Comment
 from django.core.cache import cache
 
 
@@ -36,6 +36,7 @@ class PostsPagesTests(TestCase):
         self.user = self.post.author
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -209,6 +210,8 @@ class PaginatorViewsTest(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
+
 
     def test_pages_contains_correct_records(self):
         NUM_POSTS_FIRST_PAGE: int = 10
@@ -391,3 +394,62 @@ class FollowPageTests(TestCase):
         authorized_client_obj = second_auth_response.context['page_obj'][0]
         self.assertNotEqual(authorized_client_obj.text, new_post.text)
         self.assertEqual(authorized_client_obj.text, self.post_02.text)
+
+
+class AddCommentTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.guest_client = Client()
+        cls.author_client = Client()
+        cls.user_author = User.objects.create(username='test-author')
+        cls.author_client.force_login(cls.user_author)
+        cls.authorized_client = Client()
+        cls.user_authorized = User.objects.create(username='test-authorized')
+        cls.authorized_client.force_login(cls.user_authorized)
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='test-slug-com',
+            description='Тестовое описание',
+        )
+        cls.post = Post.objects.create(
+            author=cls.user_author,
+            group=cls.group,
+            text='Тестовый пост для комментария',
+        )
+
+    def test_add_comment_for_authorized_client(self):
+        """Оставлять комментарий может только авторизованный пользователь."""
+        comments_count = Comment.objects.count()
+        form_data = {   
+            'text': 'Новый комментарий к посту'
+        }
+        response_auth = [
+            (self.authorized_client.post(
+                reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
+                data=form_data,
+                follow=True
+            )),
+            (self.author_client.post(
+                reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
+                data=form_data,
+                follow=True
+            )),
+        ]
+        for response in response_auth:
+            with self.subTest(response=response):
+                self.assertRedirects(response, reverse(
+                    'posts:post_detail', kwargs={'post_id': self.post.pk}
+                )
+                )
+        self.assertEqual(Comment.objects.count(), comments_count + 2)
+        response_guest = self.guest_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
+            data=form_data,
+            follow=True
+        )
+        self.assertRedirects(
+            response_guest,
+            (f'/auth/login/?next=/posts/{self.post.pk}/comment/')
+        )
+        self.assertEqual(Comment.objects.count(), comments_count + 2)
