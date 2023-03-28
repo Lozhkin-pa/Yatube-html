@@ -238,15 +238,13 @@ class FollowPageTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Создаем автора постов, на которого хотим подписаться
+        cls.guest_client = Client()
         cls.author_client = Client()
         cls.user_author = User.objects.create(username='author')
         cls.author_client.force_login(cls.user_author)
-        # Создаем юзера, которым хотим подписаться на автора (подписчика)
         cls.follower_client = Client()
         cls.user_follower = User.objects.create(username='follower')
         cls.follower_client.force_login(cls.user_follower)
-        # Создаем юзера, которым не будем подписываться на автора
         cls.authorized_client = Client()
         cls.user_not_follower = User.objects.create(username='not-follower')
         cls.authorized_client.force_login(cls.user_not_follower)
@@ -268,7 +266,6 @@ class FollowPageTests(TestCase):
 
     def test_follow_page(self):
         """Шаблон follow сформирован с правильным контекстом."""
-        # Подписываемся юзером на автора
         Follow.objects.create(
             user=self.user_follower,
             author=self.user_author
@@ -319,6 +316,44 @@ class FollowPageTests(TestCase):
                 author=self.user_author,
             ).exists()
         )
+
+    def test_author_can_not_follow_himself(self):
+        """Автор не может подписываться на самого себя."""
+        first_response = self.author_client.get(
+            reverse('posts:follow_index')
+        )
+        self.author_client.post(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user_author}
+            )
+        )
+        second_response = self.author_client.get(
+            reverse('posts:follow_index')
+        )
+        self.assertEqual(first_response.content, second_response.content)
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user_author,
+                author=self.user_author,
+            ).exists()
+        )
+
+    def test_guest_can_not_follow(self):
+        """Гость не может подписываться на авторов."""
+        follow_count = Follow.objects.count()
+        first_response = self.guest_client.get(
+            reverse('posts:follow_index')
+        )
+        self.guest_client.post(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user_author}
+            )
+        )
+        second_response = self.guest_client.get(
+            reverse('posts:follow_index')
+        )
+        self.assertEqual(first_response.content, second_response.content)
+        self.assertEqual(Follow.objects.count(), follow_count)
 
     def test_new_post_author_on_follow_page(self):
         """Новая запись автора появляется только в ленте подписчика."""
